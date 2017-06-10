@@ -2,6 +2,7 @@ package Helper;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by cdn on 17/6/8.
@@ -18,6 +19,27 @@ public class fileHelper {
             bw.newLine();
 
             bw.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static void appendDetails(Map<String, ArrayList<String>> map){
+        try {
+            for (String movieid : map.keySet()) {
+                File file = new File("/Users/chentiange/Desktop/FilmData/src/main/Mtime/mtime_film_details_"+movieid + ".txt");
+                BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+                ArrayList<String> contents = map.get(movieid);
+                for (int i = 0; i < contents.size(); i++) {
+                    bw.append(contents.get(i));
+                    bw.newLine();
+                }
+                bw.close();
+            }
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

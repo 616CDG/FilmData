@@ -14,7 +14,7 @@ import java.util.ArrayList;
 /**
  * Created by chentiange on 2017/6/9.
  */
-public class Mtime_Movie_Links {
+public class Mtime_Cinemas {
     private static String url="http://theater.mtime.com/China_Jiangsu_Province_Nanjing/";
 
 
