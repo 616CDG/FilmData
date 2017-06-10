@@ -1,5 +1,6 @@
 package pageFetch;
 
+import Helper.DatabaseHelper;
 import Helper.fileHelper;
 import Helper.urlHelper;
 import io.github.bonigarcia.wdm.ChromeDriverManager;
@@ -10,6 +11,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
@@ -107,11 +109,6 @@ public class Baidu implements Runnable{
             return -1;
         }
 
-//        try {
-//            Thread.sleep(5000);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
         //check date
 
         String url_date = url.substring(url.length() - 13, url.length());
@@ -245,6 +242,59 @@ public class Baidu implements Runnable{
         }
     }
 
+    public void getCinemaInfo(){
+        DatabaseHelper helper = new DatabaseHelper();
+        WebDriver driver = new ChromeDriver();
+        ArrayList<String> infos = fileHelper.getStrings("/Users/user/Documents/code/FilmData/src/main/file/baidu_cinemas.txt");
+        for (int i = 0;i < infos.size();i++){
+            String name = infos.get(i).split(",")[0];
+            String id = infos.get(i).split(",")[1];
+            String url = "https://dianying.nuomi.com/cinema/cinemadetail?cityId=315&cinemaId=" + id;
+            driver.get(url);
+            String address = getByXPath("//*[@id=\"cinemaIntro\"]/div[1]/div[1]/div/p",driver).getText();
+            int index = address.length() - 1;
+            for (int j = index;i >= 0;j--){
+                char c = address.charAt(j);
+                if (!(c >= '0' && c <= '9') && c != '-' && c != ','){
+                    index = j;
+                    break;
+                }
+            }
+            String phone = address.substring(index + 1,address.length());
+            address = address.substring(0,index + 1);
+            helper.saveTheatres(name,address,phone,1);
+
+            System.out.println(address + "   " + phone);
+        }
+        driver.quit();
+        try {
+            helper.con.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void getFilmPic(){
+        WebDriver driver = new ChromeDriver();
+        for (int i = 0;i < movies.size();i++){
+            String name = movies.get(i).split(",")[0];
+            String id = movies.get(i).split(",")[1];
+            String url = "https://dianying.nuomi.com/movie/detail?movieId=" + id;
+            driver.get(url);
+
+            String img = getByXPath("//*[@id=\"detailIntro\"]/div/div[1]/img",driver).getAttribute("src");
+            DatabaseHelper helper = new DatabaseHelper();
+            helper.updateFilmImg(name,img);
+            try {
+                helper.con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        driver.quit();
+    }
+
     public static void main(String[] args) {
 
         ChromeDriverManager.getInstance().setup();
@@ -255,12 +305,15 @@ public class Baidu implements Runnable{
         ArrayList<String> movies = fileHelper.getStrings(movies_url);
         ArrayList<String> dates = fileHelper.getStrings(dates_url);
 
-        for (int i = 23;i < 32;i++){
+        for (int i = 0;i < 1;i++){
             new Thread(new Baidu(cinemas, movies, dates,i,i)).start();
         }
+        new Thread(new Baidu()).start();
     }
 
     public void run() {
-        getDetails();
+        getFilmPic();
+//        getDetails();
+//        getCinemaInfo();
     }
 }
